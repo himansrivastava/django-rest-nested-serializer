@@ -18,6 +18,17 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ("id", "email", "username", "comment")
 
+    def create(self, validated_data):
+        comment_data = validated_data.pop("comment")
+
+        # Creating the user object
+        user = User.objects.create(**validated_data)
+
+        for comment in comment_data:
+            Comment.objects.create(**comment)
+
+        return user
+
     def update(self, instance, validated_data):
         comment_data = validated_data.pop("comment")
 
