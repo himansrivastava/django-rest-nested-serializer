@@ -7,25 +7,28 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = "__all__"
+        fields = ("id", "user", "content", "created")
+        read_only_fields = ("id", "user")
 
 
 class UserSerializer(serializers.ModelSerializer):
-    comment = CommentSerializer(many=True)
+    comment = CommentSerializer(many=True, required=False, allow_null=True)
     id = serializers.IntegerField(required=False)
 
     class Meta:
         model = User
         fields = ("id", "email", "username", "comment")
+        read_only_fields = ("id",)
 
     def create(self, validated_data):
+        print(validated_data)
         comment_data = validated_data.pop("comment")
 
         # Creating the user object
         user = User.objects.create(**validated_data)
 
         for comment in comment_data:
-            Comment.objects.create(**comment)
+            Comment.objects.create(user=user, **comment)
 
         return user
 
@@ -49,7 +52,7 @@ class UserSerializer(serializers.ModelSerializer):
         for comment in comment_data:
             comment_id = comment.get("id", None)
             if comment_id is None:
-                Comment.objects.create(**comment)
+                Comment.objects.create(user=user, **comment)
             else:
                 current_data.append(comment_id)
                 # current_data creates a list of old records in the incoming data
